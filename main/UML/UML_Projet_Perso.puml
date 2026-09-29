@@ -1,0 +1,152 @@
+@startuml
+
+skinparam classAttributeIconSize 0
+skinparam backgroundColor #FAF8F5
+skinparam class {
+    BackgroundColor #FFFFFF
+    BorderColor #2C3E50
+    ArrowColor #2C3E50
+    FontSize 12
+}
+
+enum PhaseJeu {
+    JOUR
+    NUIT
+}
+
+class Jeu {
+    - phaseCourante : PhaseJeu
+    - jourActuel : int
+    + changerPhase()
+    + verifierFinDePartie()
+}
+
+class Joueur {
+    - pv : int
+    - pvMax : int
+    - argent : int
+    - degatsArme : int
+    - posX : int
+    - posY : int
+    + deplacer(dx : int, dy : int)
+    + attaquer(m : Monstre)
+    + ajouterArgent(montant : int)
+    + retirerArgent(montant : int) : boolean
+    + ameliorerArme(cout : int, bonusDegats : int)
+    + placerDefense(d : Defense)
+    + estAProximiteDe(x : int, y : int, distanceMax : int) : boolean
+    + verifierCollision(x : int, y : int) : boolean
+}
+
+class Champ {
+    - id : int
+    - posX : int
+    - posY : int
+    - estOccupe : boolean
+    - tempsPousseRestant : int
+    + planter(g : Graine)
+    + appliquerEngrais(reductionTemps : int)
+    + recolter() : Int
+}
+
+class Magasin {
+    + acheterGraine(j : Joueur, g : Graine) : boolean
+    + acheterEngrais(j : Joueur, e : Engrais) : boolean
+    + acheterDefense(j : Joueur, d : Defense) : boolean
+    + ameliorerArmeJoueur(j : Joueur, cout : int) : boolean
+}
+
+abstract class Item {
+    # nom : String
+    # prixAchat : int
+}
+
+class Graine extends Item {
+    - niveau : int
+    - valeurVente : int
+    - tempsDePousse : int
+}
+
+class Engrais extends Item {
+    - reductionTemps : int
+}
+
+abstract class Defense extends Item {
+    # pv : int
+    # pvMax : int
+    # posX : int
+    # posY : int
+    + subirDegats(montant : int)
+}
+
+class Barricade extends Defense {
+}
+
+class Piege extends Defense {
+    - degats : int
+    + infligerDegats(m : Monstre)
+}
+
+class GestionnaireVagues {
+    - numeroVague : int
+    + genererVague()
+    + calculerBonusSurvie() : int
+}
+
+abstract class Monstre {
+    # pv : int
+    # pvMax : int
+    # degats : int
+    # vitesse : int
+    # posX : int
+    # posY : int
+    + deplacer()
+    + attaquerJoueur(j : Joueur)
+    + attaquerDefense(d : Defense)
+    + subirDegats(montant : int)
+}
+
+' ==========================================
+' RELATIONS (EXHAUSTIVES)
+' ==========================================
+
+' Structure principale du Jeu
+Jeu "1" *-- "1" PhaseJeu : contient >
+Jeu "1" *-- "1" Joueur : contient >
+Jeu "1" *-- "4" Champ : contient >
+Jeu "1" *-- "1" Magasin : contient >
+Jeu "1" *-- "1" GestionnaireVagues : contient >
+
+' Héritages
+Item <|-- Graine
+Item <|-- Engrais
+Item <|-- Defense
+Defense <|-- Barricade
+Defense <|-- Piege
+
+' Interactions du Champ
+Champ "0..1" o-- "0..1" Graine : contient >
+
+' Interactions du Gestionnaire de Vagues
+GestionnaireVagues "1" *-- "*" Monstre : gere >
+
+' Interactions du Joueur
+Joueur "1" o-- "*" Defense : possede et place >
+Joueur ..> Monstre : attaque >
+Joueur ..> Champ : interagit >
+
+' Interactions des Monstres
+Monstre ..> Joueur : attaque >
+Monstre ..> Defense : attaque >
+
+' Interactions du Piege
+Piege ..> Monstre : blesse >
+
+' Interactions du Magasin
+Magasin ..> Joueur : modifie >
+Magasin ..> Item : vend >
+Magasin ..> Graine : vend >
+Magasin ..> Engrais : vend >
+Magasin ..> Defense : vend >
+
+@enduml
